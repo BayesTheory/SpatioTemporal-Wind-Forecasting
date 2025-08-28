@@ -1,62 +1,65 @@
 {
-  "1ARIMA": {
-    "ativo": false,
+  "1arima": {
+    "ativo": true,
     "ordem": [1, 0, 1]
   },
-  "2Fcnn": {
-    "ativo": false,
+  "2fcnn": {
+    "ativo": true,
     "class_name": "FCNN5",
-    "epocas": 50,
+    "epocas": 250,
     "batch_size": 32,
-    "learning_rate": 0.001
+    "learning_rate": 0.001,
+    "patience": 15
   },
-  "3ConvLSTM": {
+  "3convlstm": {
     "ativo": true,
     "class_name": "ConvLSTM",
-    "epocas": 50,
+    "epocas": 250,
     "batch_size": 16,
-    "learning_rate": 0.001
+    "learning_rate": 0.001,
+    "patience": 15
   },
-  "4PredRNN": {
+  "4predrnn": {
     "ativo": true,
     "class_name": "PredRNN",
-    "epocas": 50,
+    "epocas": 250,
     "batch_size": 8,
-    "learning_rate": 0.001
+    "learning_rate": 0.001,
+    "patience": 20
   },
-  "5PredFormer": {
-    "ativo": false,
+  "5predformer": {
+    "ativo": true,
     "class_name": "PredFormer",
-    "epocas": 100,
+    "epocas": 250,
     "batch_size": 8,
     "learning_rate": 0.0001,
-    "num_heads": 4,
-    "d_model": 128
+    "patience": 20
   },
-  "6ConvLSTMFIS": {
+  "6convlstmfis": {
     "ativo": false,
     "class_name": "ConvLSTMFIS",
-    "epocas": 75,
+    "epocas": 250,
     "batch_size": 16,
     "learning_rate": 0.001,
+    "patience": 15,
     "peso_fisica": 0.1
   },
-  "7PredRNNFIS": {
+  "7predrnnfis": {
     "ativo": false,
     "class_name": "PredRNNFIS",
-    "epocas": 100,
+    "epocas": 250,
     "batch_size": 8,
     "learning_rate": 0.001,
+    "patience": 20,
     "peso_fisica": 0.1
   },
-  "8PredFormerFIS": {
+  "8predformerfis": {
     "ativo": false,
     "class_name": "PredFormerFIS",
-    "epocas": 100,
+    "epocas": 250,
     "batch_size": 8,
     "learning_rate": 0.0001,
-    "num_heads": 4,
-    "d_model": 128,
+    "patience": 20,
     "peso_fisica": 0.1
   }
 }

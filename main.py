@@ -1,5 +1,5 @@
 # main.py
-# Versão Final 2.0 - Orquestrador com Validação Cruzada Temporal K-Fold
+# Versão Final 2.1 - Com Early Stopping e Tabela de Resultados
 
 import importlib
 import warnings
@@ -68,17 +68,13 @@ def executar_modelo(model_name: str, model_config: dict, dados_treino_cv: xr.Dat
         
         if model_name.lower() == '1arima':
             print(f"\n--- {model_name.upper()} | TREINO E PREVISÃO EM GRADE ---")
-            # Para o ARIMA, não há CV. Treinamos no conjunto de CV completo e prevemos no teste.
             df_treino_grade = dados_treino_cv.to_dataframe(name='ws100')
             modulo_arima = importlib.import_module("Modelos.1arima")
             
-            # A previsão do ARIMA é um processo contínuo
             previsoes_continuas = modulo_arima.executar_arima_para_grade(df_treino_grade, len(dados_teste), model_config['ordem'])
             
-            # Convertemos a previsão contínua para o formato de janelas de previsão
             previsoes_reais_teste = []
             for i in range(len(y_teste_real)):
-                # Pega a fatia correspondente à janela de previsão
                 fatia = previsoes_continuas[i : i + PASSOS_A_PREVER]
                 previsoes_reais_teste.append(fatia)
             previsoes_reais_teste = np.array(previsoes_reais_teste)
@@ -109,7 +105,8 @@ def executar_modelo(model_name: str, model_config: dict, dados_treino_cv: xr.Dat
                     train.executar_treino_e_previsao(
                         model_class, model_params, X_treino_norm, y_treino_norm, X_val_norm,
                         model_config['epocas'], model_config['batch_size'], model_config['learning_rate'], device,
-                        X_val=X_val_norm, y_val=utils.aplicar_scaler_grade(y_val_real, scaler)
+                        X_val=X_val_norm, y_val=utils.aplicar_scaler_grade(y_val_real, scaler),
+                        patience=model_config.get('patience', 10)
                     )
 
             # --- TREINO FINAL E PREVISÃO NO TESTE ---
@@ -127,6 +124,7 @@ def executar_modelo(model_name: str, model_config: dict, dados_treino_cv: xr.Dat
             previsoes_norm_teste = train.executar_treino_e_previsao(
                 model_class, model_params, X_treino_final_norm, y_treino_final_norm, X_teste_norm,
                 model_config['epocas'], model_config['batch_size'], model_config['learning_rate'], device,
+                patience=model_config.get('patience', 10) # Pega 'patience' do JSON
             )
             previsoes_reais_teste = utils.desnormalizar_dados_grade(previsoes_norm_teste, scaler_final)
         
@@ -145,11 +143,14 @@ def executar_modelo(model_name: str, model_config: dict, dados_treino_cv: xr.Dat
             output_dir=caminho_relatorio
         )
         mlflow.log_artifacts(caminho_relatorio, artifact_path=model_name)
+        
+        return metricas_teste_final
 
     except Exception as e:
         print(f"\nERRO: A execução do modelo {model_name} falhou. {e}")
         import traceback
         traceback.print_exc()
+        return None
     finally:
         if mlflow.active_run(): mlflow.end_run()
         print(f"\n{'='*60}\n== PROCESSO PARA {model_name.upper()} FINALIZADO ==\n{'='*60}")
@@ -179,17 +180,31 @@ if __name__ == "__main__":
         dados_treino_cv = dados_grade_completos.isel(valid_time=slice(0, n_treino_cv))
         dados_teste = dados_grade_completos.isel(valid_time=slice(n_treino_cv, None))
 
-        print(f"Dados divididos: {len(dados_treino_cv.valid_time)} para Treino/CV ({N_FOLDS_CV} folds) e {len(dados_teste.valid_time)} para Teste Final.")
+        print(f"Dados divididos: {len(dados_treino_cv.valid_time)} para Treino/CV e {len(dados_teste.valid_time)} para Teste Final.")
 
         # --- 3. LOOP DE EXECUÇÃO DOS MODELOS ATIVOS ---
         modelos_a_executar = {
             nome: config for nome, config in CONFIG_MODELOS.items() if config.get("ativo", False)
         }
+        resultados_finais = []
+
         if not modelos_a_executar:
-            print("Nenhum modelo está marcado como 'ativo' no arquivo 'modelos.json'. Finalizando.")
+            print("Nenhum modelo ativo no 'modelos.json'.")
         else:
             print(f"Modelos a serem executados: {list(modelos_a_executar.keys())}")
             for nome_modelo, config_modelo in modelos_a_executar.items():
-                executar_modelo(nome_modelo, config_modelo, dados_treino_cv, dados_teste)
+                metricas = executar_modelo(nome_modelo, config_modelo, dados_treino_cv, dados_teste)
+                if metricas:
+                    resultados_finais.append({'modelo': nome_modelo, **metricas})
+        
+        # --- 4. EXIBIÇÃO DA TABELA COMPARATIVA FINAL ---
+        if resultados_finais:
+            print("\n\n" + "="*80)
+            print("== TABELA COMPARATIVA FINAL - RESULTADOS NO CONJUNTO DE TESTE ==")
+            print("="*80)
+            df_resultados = pd.DataFrame(resultados_finais).set_index('modelo').sort_values(by='rmse')
+            print(df_resultados.to_string(float_format="%.5f"))
+            print("="*80)
+
     else:
-        print("Falha ao carregar os dados. A execução será interrompida.")
+        print("Falha ao carregar os dados. Execução interrompida.")
