@@ -3,7 +3,7 @@
     "ativo": true,
     "ordem": [1, 0, 1]
   },
-  "2fcnn": {
+  "2Fcnn": {
     "ativo": true,
     "class_name": "FCNN5",
     "epocas": 50,

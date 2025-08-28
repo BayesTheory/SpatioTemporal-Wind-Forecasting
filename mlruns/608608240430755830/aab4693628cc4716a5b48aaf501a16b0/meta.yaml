@@ -1,0 +1,15 @@
+artifact_uri: file:///home/users/rianagario/Projeto%20materia%20DL%20/Sistema%20Turco/mlruns/608608240430755830/aab4693628cc4716a5b48aaf501a16b0/artifacts
+end_time: 1756401352446
+entry_point_name: ''
+experiment_id: '608608240430755830'
+lifecycle_stage: active
+run_id: aab4693628cc4716a5b48aaf501a16b0
+run_name: Baseline_1ARIMA
+run_uuid: aab4693628cc4716a5b48aaf501a16b0
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1756401351833
+status: 3
+tags: []
+user_id: rianagario

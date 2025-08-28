@@ -5,35 +5,57 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import xarray as xr
-from sklearn.metrics import r2_score
+import os
 
 # ==============================================================================
-# FUNÇÃO 1: VISUALIZAÇÃO DE UMA ÚNICA PREVISÃO (MAPAS)
+# FUNÇÃO PRINCIPAL DE PÓS-PROCESSAMENTO
 # ==============================================================================
 
-def visualizar_previsao_e_erro(
+def gerar_relatorio_visual(
     y_real: np.ndarray, 
     y_predito: np.ndarray, 
     dados_grade_base: xr.DataArray,
-    sample_idx: int = 0, 
-    horizon_idx: int = 0,
-    save_path: str = None
+    model_name: str,
+    output_dir: str
 ):
     """
-    Gera uma visualização lado a lado de (Real, Previsto, Erro) para uma única
-    amostra e horizonte de previsão.
+    Gera e salva um conjunto de visualizações comparativas para os resultados do modelo.
 
     Args:
-        y_real (np.ndarray): Array com todos os valores reais do conj. de teste.
-                             Shape: (n_amostras, horizonte, altura, largura).
-        y_predito (np.ndarray): Array com as previsões do modelo. Shape igual a y_real.
-        dados_grade_base (xr.DataArray): DataArray original (saída de pre.py) para
-                                         obter as coordenadas de lat/lon.
-        sample_idx (int): O índice da amostra de teste a ser plotada.
-        horizon_idx (int): O passo de tempo no futuro a ser plotado (ex: 0 para 3h, 1 para 6h).
-        save_path (str, optional): Caminho para salvar a imagem. Se None, apenas exibe.
+        y_real (np.ndarray): Array com valores reais do teste.
+        y_predito (np.ndarray): Array com previsões do modelo.
+        dados_grade_base (xr.DataArray): DataArray para obter coordenadas.
+        model_name (str): Nome do modelo para os títulos.
+        output_dir (str): Diretório para salvar as imagens.
     """
-    # 1. Extrair as coordenadas e os frames 2D específicos
+    # Seleciona 3 amostras para visualizar: início, meio e fim do conjunto de teste
+    indices_para_plotar = [0, len(y_real) // 2, len(y_real) - 1]
+
+    for sample_idx in indices_para_plotar:
+        # Foca apenas no primeiro passo de tempo do horizonte de previsão (ex: +3h)
+        horizon_idx = 0 
+        
+        save_path = os.path.join(output_dir, f"comparacao_teste_amostra_{sample_idx}.png")
+        
+        _plotar_comparacao_individual(
+            y_real=y_real,
+            y_predito=y_predito,
+            dados_grade_base=dados_grade_base,
+            model_name=model_name,
+            sample_idx=sample_idx,
+            horizon_idx=horizon_idx,
+            save_path=save_path
+        )
+
+# ==============================================================================
+# FUNÇÃO AUXILIAR DE PLOTAGEM
+# ==============================================================================
+
+def _plotar_comparacao_individual(
+    y_real, y_predito, dados_grade_base, model_name, sample_idx, horizon_idx, save_path
+):
+    """Gera a imagem de 3 painéis (Real, Previsto, Erro)."""
+    
     lat_coords = dados_grade_base.latitude.values
     lon_coords = dados_grade_base.longitude.values
     
@@ -41,34 +63,27 @@ def visualizar_previsao_e_erro(
     predito_frame = y_predito[sample_idx, horizon_idx, :, :]
     erro_frame = real_frame - predito_frame
 
-    # 2. Calcular métricas para ESTA IMAGEM específica
-    rmse_frame = np.sqrt(np.mean(erro_frame ** 2))
-    mae_frame = np.mean(np.abs(erro_frame))
-    r2_frame = r2_score(real_frame.flatten(), predito_frame.flatten())
-
-    # 3. Configurar a figura e os eixos
     fig, axes = plt.subplots(1, 3, figsize=(22, 6), sharey=True)
-    fig.suptitle(f"Comparação de Previsão (Amostra: {sample_idx}, Horizonte: +{(horizon_idx+1)*3}h)", fontsize=16)
+    fig.suptitle(f"Comparativo de Previsão - Modelo: {model_name.upper()} (Amostra de Teste: {sample_idx})", fontsize=16)
 
-    # Definir limites de cor consistentes para Real e Previsto
     vmin = min(real_frame.min(), predito_frame.min())
     vmax = max(real_frame.max(), predito_frame.max())
     
-    # 4. Plotar o mapa Real (Ground Truth)
+    # Painel 1: Campo Real (Ground Truth)
     im1 = axes[0].pcolormesh(lon_coords, lat_coords, real_frame, cmap='viridis', vmin=vmin, vmax=vmax)
-    axes[0].set_title(f'Campo Real\n(Velocidade do Vento m/s)', fontsize=12)
-    fig.colorbar(im1, ax=axes[0], orientation='vertical', label='m/s')
+    axes[0].set_title('Campo Real (GT)', fontsize=12)
+    fig.colorbar(im1, ax=axes[0], orientation='vertical', label='Velocidade do Vento (m/s)')
 
-    # 5. Plotar o mapa Previsto
+    # Painel 2: Campo Previsto
     im2 = axes[1].pcolormesh(lon_coords, lat_coords, predito_frame, cmap='viridis', vmin=vmin, vmax=vmax)
-    axes[1].set_title(f'Campo Previsto\nR² (imagem): {r2_frame:.3f}', fontsize=12)
-    fig.colorbar(im2, ax=axes[1], orientation='vertical', label='m/s')
+    axes[1].set_title('Campo Previsto', fontsize=12)
+    fig.colorbar(im2, ax=axes[1], orientation='vertical', label='Velocidade do Vento (m/s)')
 
-    # 6. Plotar o mapa de Erro
-    # Usar um colormap divergente para o erro, centrado em zero
+    # Painel 3: Mapa de Erro
     limite_erro = np.max(np.abs(erro_frame))
     im3 = axes[2].pcolormesh(lon_coords, lat_coords, erro_frame, cmap='coolwarm', vmin=-limite_erro, vmax=limite_erro)
-    axes[2].set_title(f'Erro (Real - Previsto)\nRMSE (imagem): {rmse_frame:.3f} | MAE (imagem): {mae_frame:.3f}', fontsize=12)
+    rmse_frame = np.sqrt(np.mean(erro_frame ** 2))
+    axes[2].set_title(f'Erro (Real - Previsto)\nRMSE na Imagem: {rmse_frame:.3f} m/s', fontsize=12)
     fig.colorbar(im3, ax=axes[2], orientation='vertical', label='Diferença (m/s)')
     
     for ax in axes:
@@ -77,13 +92,12 @@ def visualizar_previsao_e_erro(
         ax.set_aspect('equal', adjustable='box')
         ax.grid(True, linestyle='--', alpha=0.5)
 
-    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    plt.tight_layout(rect=[0, 0, 1, 0.95])
+    plt.savefig(save_path, dpi=150)
+    print(f"  > Relatório visual salvo em: {save_path}")
+    plt.close()
 
-    if save_path:
-        plt.savefig(save_path, dpi=300)
-        print(f"Visualização salva em: {save_path}")
-        
-    plt.show()
+# (Você pode manter a função 'plotar_comparacao_metricas_modelos' do MLflow se quiser)
 
 
 # ==============================================================================
