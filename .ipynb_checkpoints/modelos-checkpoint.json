@@ -1,0 +1,62 @@
+{
+  "1ARIMA": {
+    "ativo": true,
+    "ordem": [1, 0, 1]
+  },
+  "2fcnn": {
+    "ativo": true,
+    "class_name": "FCNN5",
+    "epocas": 50,
+    "batch_size": 32,
+    "learning_rate": 0.001
+  },
+  "3ConvLSTM": {
+    "ativo": false,
+    "class_name": "ConvLSTM",
+    "epocas": 75,
+    "batch_size": 16,
+    "learning_rate": 0.001
+  },
+  "4PredRNN": {
+    "ativo": false,
+    "class_name": "PredRNN",
+    "epocas": 100,
+    "batch_size": 8,
+    "learning_rate": 0.001
+  },
+  "5PredFormer": {
+    "ativo": false,
+    "class_name": "PredFormer",
+    "epocas": 100,
+    "batch_size": 8,
+    "learning_rate": 0.0001,
+    "num_heads": 4,
+    "d_model": 128
+  },
+  "6ConvLSTMFIS": {
+    "ativo": false,
+    "class_name": "ConvLSTMFIS",
+    "epocas": 75,
+    "batch_size": 16,
+    "learning_rate": 0.001,
+    "peso_fisica": 0.1
+  },
+  "7PredRNNFIS": {
+    "ativo": false,
+    "class_name": "PredRNNFIS",
+    "epocas": 100,
+    "batch_size": 8,
+    "learning_rate": 0.001,
+    "peso_fisica": 0.1
+  },
+  "8PredFormerFIS": {
+    "ativo": false,
+    "class_name": "PredFormerFIS",
+    "epocas": 100,
+    "batch_size": 8,
+    "learning_rate": 0.0001,
+    "num_heads": 4,
+    "d_model": 128,
+    "peso_fisica": 0.1
+  }
+}
