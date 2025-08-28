@@ -3,7 +3,7 @@
 
 import torch
 from torch import nn
-import torch.nn.functional as F  # <<< CORREÇÃO AQUI: Importação que faltava
+import torch.nn.functional as F
 from einops import rearrange
 from einops.layers.torch import Rearrange
 
@@ -74,25 +74,30 @@ class TransformerBlock(nn.Module):
         return x
 
 # ==============================================================================
-# ARQUITETURA PRINCIPAL DO PRED FORMER (VERSÃO AVANÇADA)
+# ARQUITETURA PRINCIPAL DO PRED FORMER (VERSÃO AVANÇADA E CONFIGURÁVEL)
 # ==============================================================================
 
 class PredFormer(nn.Module):
     def __init__(self, past_frames, future_frames, 
                  image_size=(21, 29), patch_size=(7, 7), 
-                 d_model=128, nhead=4, num_encoder_layers=4, dropout=0.1):
+                 d_model=128, nhead=4, num_encoder_layers=4, dropout=0.1, **kwargs):
         super().__init__()
 
         self.past_frames = past_frames
         self.future_frames = future_frames
         
-        # --- Parâmetros fixos da arquitetura avançada ---
+        # Garante que os parâmetros de tupla/lista do JSON sejam convertidos corretamente
+        if isinstance(patch_size, list): patch_size = tuple(patch_size)
+        if isinstance(image_size, list): image_size = tuple(image_size)
+        
+        # Parâmetros fixos da arquitetura avançada
         self.num_channels = 1
         self.dim_head = 64 # Dimensão por cabeça de atenção
         
-        # --- Parâmetros derivados ---
+        # Parâmetros derivados
         self.image_h, self.image_w = image_size
         self.patch_h, self.patch_w = patch_size
+        
         # Calcula o número de patches para as dimensões *após* o padding
         padded_h = (self.image_h + self.patch_h - 1) // self.patch_h * self.patch_h
         padded_w = (self.image_w + self.patch_w - 1) // self.patch_w * self.patch_w
@@ -124,12 +129,14 @@ class PredFormer(nn.Module):
         B, T_in, H, W = x.shape
         x = x.unsqueeze(2)
 
+        # Padding para que as dimensões sejam divisíveis pelo patch_size
         pad_h = (self.patch_h - H % self.patch_h) % self.patch_h
         pad_w = (self.patch_w - W % self.patch_w) % self.patch_w
         x = F.pad(x, (0, pad_w, 0, pad_h))
         
         padded_H, padded_W = x.shape[-2], x.shape[-1]
 
+        # Encoder
         x = self.to_patch_embedding(x)
         x += self.pos_embedding
         x = self.dropout(x)
@@ -143,19 +150,21 @@ class PredFormer(nn.Module):
             x_spat = spatial_attn(x_spat)
             x = rearrange(x_spat, '(b t) n d -> b t n d', t=T_in)
 
+        # Decoder
         x = rearrange(x, 'b t n d -> b d n t')
         x = self.to_future_proj(x)
         x = rearrange(x, 'b d n t -> b t n d')
 
         x = self.mlp_head(x)
         
+        # Reconstrução
         output = rearrange(x, 'b t (h w) (p1 p2 c) -> b t c (h p1) (w p2)', 
                            h=padded_H // self.patch_h, 
                            w=padded_W // self.patch_w, 
                            p1=self.patch_h, p2=self.patch_w, 
                            c=self.num_channels)
 
-        output = output[:, :, :, :H, :W]
+        output = output[:, :, :, :H, :W] # Corta o padding
         output = output.squeeze(2)
 
         return output

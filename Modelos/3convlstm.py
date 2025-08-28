@@ -58,10 +58,11 @@ class ConvLSTMCell(nn.Module):
 class ConvLSTM(nn.Module):
     """
     Modelo ConvLSTM completo usando uma arquitetura Encoder-Decoder.
-    Este modelo é o primeiro da nossa hierarquia a entender a estrutura espacial
-    dos dados, tratando cada passo de tempo como uma imagem e não como um vetor.
+    Os parâmetros-chave da arquitetura (hidden_dim, kernel_size) são passados
+    dinamicamente a partir do arquivo de configuração JSON.
     """
-    def __init__(self, past_frames, future_frames, input_dim=1, hidden_dim=64, kernel_size=(3, 3), bias=True):
+    def __init__(self, past_frames, future_frames, 
+                 input_dim=1, hidden_dim=64, kernel_size=(3, 3), bias=True, **kwargs):
         """
         Construtor do modelo ConvLSTM Encoder-Decoder.
 
@@ -69,21 +70,24 @@ class ConvLSTM(nn.Module):
             past_frames (int): Número de frames na sequência de entrada (T_in).
             future_frames (int): Número de frames na sequência de saída (T_out).
             input_dim (int): Número de canais nos frames de entrada (1 para ws100).
-            hidden_dim (int): Número de canais nos estados ocultos.
-            kernel_size (tuple): Tamanho do kernel da convolução.
+            hidden_dim (int): Número de canais nos estados ocultos (configurável).
+            kernel_size (tuple): Tamanho do kernel da convolução (configurável).
             bias (bool): Se a camada de convolução usa bias.
+            **kwargs: Permite receber outros argumentos do JSON sem causar erro.
         """
         super(ConvLSTM, self).__init__()
         self.past_frames = past_frames
         self.future_frames = future_frames
         
-        # Célula ConvLSTM que será usada tanto no encoder quanto no decoder
+        # Garante que kernel_size seja uma tupla
+        if isinstance(kernel_size, list):
+            kernel_size = tuple(kernel_size)
+
         self.cell = ConvLSTMCell(input_dim=input_dim,
                                  hidden_dim=hidden_dim,
                                  kernel_size=kernel_size,
                                  bias=bias)
                                  
-        # Camada de convolução final para mapear o estado oculto de volta para 1 canal de saída
         self.output_conv = nn.Conv2d(in_channels=hidden_dim,
                                      out_channels=input_dim,
                                      kernel_size=(1, 1),
@@ -92,53 +96,28 @@ class ConvLSTM(nn.Module):
     def forward(self, x):
         """
         Define a passagem para a frente (forward pass).
-
-        Args:
-            x (torch.Tensor): Tensor de entrada com shape (batch, past_frames, height, width).
-
-        Returns:
-            torch.Tensor: Tensor de saída com as previsões, com shape (batch, future_frames, height, width).
         """
-        # Adiciona a dimensão do canal, esperado pelo Conv2d: (batch, past, 1, H, W)
-        # O .unsqueeze(2) adiciona uma dimensão de tamanho 1 na posição 2.
+        # Adiciona a dimensão do canal: (batch, past, 1, H, W)
         x = x.unsqueeze(2)
         
         batch_size, _, _, height, width = x.shape
         
         # 1. ENCODER
-        # Inicializa os estados oculto (h) e de célula (c)
         h, c = self.cell.init_hidden(batch_size, (height, width))
-        
-        # Itera sobre a sequência de entrada para "codificar" a informação
         for t in range(self.past_frames):
             h, c = self.cell(input_tensor=x[:, t, :, :, :], cur_state=[h, c])
             
-        # Neste ponto, 'h' e 'c' contêm a representação do "conhecimento" sobre a sequência passada.
-
-        # 2. DECODER
-        # Usa os estados finais do encoder como estados iniciais do decoder.
-        # O decoder irá gerar 'future_frames' quadros.
+        # 2. DECODER (Auto-regressivo)
         outputs = []
-        
-        # O primeiro input para o decoder será o último frame visto pelo encoder
         decoder_input = x[:, -1, :, :, :] 
         
         for t in range(self.future_frames):
             h, c = self.cell(input_tensor=decoder_input, cur_state=[h, c])
-            
-            # O estado oculto 'h' tem 'hidden_dim' canais.
-            # Usamos uma conv 1x1 para mapeá-lo de volta para 1 canal de saída.
             output_frame = self.output_conv(h)
             outputs.append(output_frame)
-            
-            # Importante: o próximo input do decoder é o frame que ele acabou de gerar.
-            # Isso torna o modelo auto-regressivo.
             decoder_input = output_frame
             
-        # Concatena a lista de frames de saída em um único tensor
         outputs = torch.stack(outputs, dim=1)
-        
-        # Remove a dimensão do canal para retornar ao formato esperado (batch, future, H, W)
-        outputs = outputs.squeeze(2)
+        outputs = outputs.squeeze(2) # Remove a dimensão do canal
         
         return outputs
