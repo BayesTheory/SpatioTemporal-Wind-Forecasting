@@ -1,26 +1,26 @@
 {
   "1ARIMA": {
-    "ativo": true,
+    "ativo": false,
     "ordem": [1, 0, 1]
   },
   "2Fcnn": {
-    "ativo": true,
+    "ativo": false,
     "class_name": "FCNN5",
     "epocas": 50,
     "batch_size": 32,
     "learning_rate": 0.001
   },
   "3ConvLSTM": {
-    "ativo": false,
+    "ativo": true,
     "class_name": "ConvLSTM",
-    "epocas": 75,
+    "epocas": 50,
     "batch_size": 16,
     "learning_rate": 0.001
   },
   "4PredRNN": {
-    "ativo": false,
+    "ativo": true,
     "class_name": "PredRNN",
-    "epocas": 100,
+    "epocas": 50,
     "batch_size": 8,
     "learning_rate": 0.001
   },
