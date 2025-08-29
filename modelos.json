@@ -1,164 +1,59 @@
 {
-
-  "1arima": {
-
-    "ativo": false,
-
-    "ordem": [1, 0, 1]
-
-  },
-
-  "2fcnn": {
-
-    "ativo": true,
-
-    "class_name": "FCNN5",
-
-    "epocas": 250,
-
-    "batch_size": 32,
-
-    "learning_rate": 0.001,
-
-    "patience": 15,
-
-    "camadas_ocultas": [2048, 1024, 512, 1024]
-
-  },
-
-  "3convlstm": {
-
-    "ativo": true,
-
-    "class_name": "ConvLSTM",
-
-    "epocas": 250,
-
-    "batch_size": 16,
-
-    "learning_rate": 0.001,
-
-    "patience": 15,
-
-    "hidden_dim": 64,
-
-    "kernel_size": [3, 3]
-
-  },
-
-  "4predrnn": {
-
-    "ativo": true,
-
-    "class_name": "PredRNN",
-
-    "epocas": 250,
-
-    "batch_size": 8,
-
-    "learning_rate": 0.001,
-
-    "patience": 20,
-
-    "hidden_dim": 64,
-
-    "kernel_size": [3, 3]
-
-  },
-
-  "5predformer": {
-
-    "ativo": true,
-
-    "class_name": "PredFormer",
-
-    "epocas": 250,
-
-    "batch_size": 8,
-
-    "learning_rate": 0.0001,
-
-    "patience": 20,
-
-    "patch_size": [7, 7],
-
-    "d_model": 128,
-
-    "nhead": 4,
-
-    "num_encoder_layers": 4
-
-  },
-
-  "6convlstmfis": {
-
-    "ativo": false,
-
-    "class_name": "ConvLSTMFIS",
-
-    "epocas": 250,
-
-    "batch_size": 16,
-
-    "learning_rate": 0.001,
-
-    "patience": 15,
-
-    "hidden_dim": 64,
-
-    "kernel_size": [3, 3],
-
-    "peso_fisica": 0.1
-
-  },
-
-  "7predrnnfis": {
-
-    "ativo": false,
-
-    "class_name": "PredRNNFIS",
-
-    "epocas": 250,
-
-    "batch_size": 8,
-
-    "learning_rate": 0.001,
-
-    "patience": 20,
-
-    "hidden_dim": 64,
-
-    "kernel_size": [3, 3],
-
-    "peso_fisica": 0.1
-
-  },
-
-  "8predformerfis": {
-
-    "ativo": false,
-
-    "class_name": "PredFormerFIS",
-
-    "epocas": 250,
-
-    "batch_size": 8,
-
-    "learning_rate": 0.0001,
-
-    "patience": 20,
-
-    "patch_size": [7, 7],
-
-    "d_model": 128,
-
-    "nhead": 4,
-
-    "num_encoder_layers": 4,
-
-    "peso_fisica": 0.1
-
-  }
-
+  "1arima": {
+    "ativo": false,
+    "ordem": [1, 0, 1]
+  },
+  "2fcnn": {
+    "ativo": true,
+    "class_name": "FCNN5",
+    "epocas": 250,
+    "batch_size": 32,
+    "learning_rate": 0.001,
+    "patience": 15,
+    "scheduler_patience": 5,
+    "scheduler_factor": 0.5,
+    "camadas_ocultas": [2048, 1024, 512, 1024],
+    "dropout_rate": 0.3
+  },
+  "3convlstm": {
+    "ativo": true,
+    "class_name": "ConvLSTM",
+    "epocas": 250,
+    "batch_size": 16,
+    "learning_rate": 0.0005,
+    "patience": 15,
+    "scheduler_patience": 5,
+    "scheduler_factor": 0.5,
+    "hidden_dim": 128,
+    "kernel_size": [5, 5],
+    "dropout_rate": 0.3
+  },
+  "4predrnn": {
+    "ativo": true,
+    "class_name": "PredRNN",
+    "epocas": 250,
+    "batch_size": 8,
+    "learning_rate": 0.001,
+    "patience": 20,
+    "scheduler_patience": 7,
+    "scheduler_factor": 0.5,
+    "hidden_dim": 64,
+    "kernel_size": [3, 3],
+    "dropout_rate": 0.2
+  },
+  "5predformer": {
+    "ativo": true,
+    "class_name": "PredFormer",
+    "epocas": 250,
+    "batch_size": 8,
+    "learning_rate": 0.0001,
+    "patience": 20,
+    "scheduler_patience": 7,
+    "scheduler_factor": 0.5,
+    "patch_size": [7, 7],
+    "d_model": 192,
+    "nhead": 8,
+    "num_encoder_layers": 6,
+    "dropout_rate": 0.2
+  }
 }
-

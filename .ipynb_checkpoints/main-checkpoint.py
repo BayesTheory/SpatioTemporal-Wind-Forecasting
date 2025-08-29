@@ -1,5 +1,5 @@
 # main.py
-# Versão Final 2.1 - Com Early Stopping e Tabela de Resultados
+# Versão Final 2.2 - Corrigido bug de passagem de parâmetros e scheduler
 
 import importlib
 import warnings
@@ -12,7 +12,6 @@ import json
 import os
 from sklearn.model_selection import TimeSeriesSplit
 
-# Importa os módulos do nosso projeto
 import utils
 import train
 from pre import pre
@@ -29,10 +28,7 @@ def carregar_config_modelos(caminho_json: str) -> dict:
     try:
         with open(caminho_json, 'r', encoding='utf-8') as f:
             config = json.load(f)
-        
-        # Garante que as chaves dos modelos estejam em minúsculas para consistência
         config_lower = {k.lower(): v for k, v in config.items()}
-        
         if '1arima' in config_lower and 'ordem' in config_lower['1arima']:
             config_lower['1arima']['ordem'] = tuple(config_lower['1arima']['ordem'])
         return config_lower
@@ -59,18 +55,14 @@ def executar_modelo(model_name: str, model_config: dict, dados_treino_cv: xr.Dat
         utils.logar_parametros_mlflow(parametros_gerais)
         utils.logar_parametros_mlflow(model_config)
 
-        # Prepara os dados de teste (com contexto anterior para a primeira janela)
         dados_contexto = dados_treino_cv.isel(valid_time=slice(-PASSOS_JANELA_ENTRADA, None))
         dados_teste_com_contexto = xr.concat([dados_contexto, dados_teste], dim="valid_time")
         X_teste, y_teste_real = utils.formatar_janelas_video(dados_teste_com_contexto, PASSOS_JANELA_ENTRADA, PASSOS_A_PREVER)
 
-        # --- SELEÇÃO DE FLUXO: ARIMA vs DEEP LEARNING ---
-        
         if model_name.lower() == '1arima':
             print(f"\n--- {model_name.upper()} | TREINO E PREVISÃO EM GRADE ---")
             df_treino_grade = dados_treino_cv.to_dataframe(name='ws100')
             modulo_arima = importlib.import_module("Modelos.1arima")
-            
             previsoes_continuas = modulo_arima.executar_arima_para_grade(df_treino_grade, len(dados_teste), model_config['ordem'])
             
             previsoes_reais_teste = []
@@ -80,7 +72,6 @@ def executar_modelo(model_name: str, model_config: dict, dados_treino_cv: xr.Dat
             previsoes_reais_teste = np.array(previsoes_reais_teste)
 
         else: # Modelos de Deep Learning
-            # --- VALIDAÇÃO CRUZADA ---
             tscv = TimeSeriesSplit(n_splits=N_FOLDS_CV)
             for fold, (train_index, val_index) in enumerate(tscv.split(dados_treino_cv.valid_time)):
                 print(f"\n--- {model_name.upper()} | FOLD CV [{fold+1}/{N_FOLDS_CV}] ---")
@@ -100,16 +91,20 @@ def executar_modelo(model_name: str, model_config: dict, dados_treino_cv: xr.Dat
 
                     modulo = importlib.import_module(f"Modelos.{model_name}")
                     model_class = getattr(modulo, model_config['class_name'])
-                    model_params = {'past_frames': PASSOS_JANELA_ENTRADA, 'future_frames': PASSOS_A_PREVER}
                     
+                    # <<< CORREÇÃO CRÍTICA 1: Passa todos os parâmetros do JSON para o modelo >>>
+                    model_params_completos = {**model_config, 'past_frames': PASSOS_JANELA_ENTRADA, 'future_frames': PASSOS_A_PREVER}
+
                     train.executar_treino_e_previsao(
-                        model_class, model_params, X_treino_norm, y_treino_norm, X_val_norm,
+                        model_class, model_params_completos, X_treino_norm, y_treino_norm, X_val_norm,
                         model_config['epocas'], model_config['batch_size'], model_config['learning_rate'], device,
                         X_val=X_val_norm, y_val=utils.aplicar_scaler_grade(y_val_real, scaler),
-                        patience=model_config.get('patience', 10)
+                        # <<< CORREÇÃO 2: Passa os parâmetros do scheduler >>>
+                        patience=model_config.get('patience', 10),
+                        scheduler_patience=model_config.get('scheduler_patience', 5),
+                        scheduler_factor=model_config.get('scheduler_factor', 0.5)
                     )
 
-            # --- TREINO FINAL E PREVISÃO NO TESTE ---
             print(f"\n--- {model_name.upper()} | TREINO FINAL E AVALIAÇÃO EM TESTE ---")
             X_treino_final, y_treino_final = utils.formatar_janelas_video(dados_treino_cv, PASSOS_JANELA_ENTRADA, PASSOS_A_PREVER)
             scaler_final = utils.criar_e_treinar_scaler_grade(X_treino_final)
@@ -119,16 +114,20 @@ def executar_modelo(model_name: str, model_config: dict, dados_treino_cv: xr.Dat
             
             modulo = importlib.import_module(f"Modelos.{model_name}")
             model_class = getattr(modulo, model_config['class_name'])
-            model_params = {'past_frames': PASSOS_JANELA_ENTRADA, 'future_frames': PASSOS_A_PREVER}
+            
+            # <<< CORREÇÃO CRÍTICA 1 (Repetida para o treino final) >>>
+            model_params_completos = {**model_config, 'past_frames': PASSOS_JANELA_ENTRADA, 'future_frames': PASSOS_A_PREVER}
 
             previsoes_norm_teste = train.executar_treino_e_previsao(
-                model_class, model_params, X_treino_final_norm, y_treino_final_norm, X_teste_norm,
+                model_class, model_params_completos, X_treino_final_norm, y_treino_final_norm, X_teste_norm,
                 model_config['epocas'], model_config['batch_size'], model_config['learning_rate'], device,
-                patience=model_config.get('patience', 10) # Pega 'patience' do JSON
+                # <<< CORREÇÃO 2 (Repetida para o treino final) >>>
+                patience=model_config.get('patience', 10),
+                scheduler_patience=model_config.get('scheduler_patience', 5),
+                scheduler_factor=model_config.get('scheduler_factor', 0.5)
             )
             previsoes_reais_teste = utils.desnormalizar_dados_grade(previsoes_norm_teste, scaler_final)
         
-        # --- MÉTRICAS E PÓS-PROCESSAMENTO (PARA TODOS OS MODELOS) ---
         metricas_teste_final = utils.calcular_metricas(y_teste_real, previsoes_reais_teste)
         print(f"\n--- MÉTRICAS FINAIS DE {model_name.upper()} NO CONJUNTO DE TESTE ---")
         print(metricas_teste_final)
@@ -159,6 +158,9 @@ def executar_modelo(model_name: str, model_config: dict, dados_treino_cv: xr.Dat
 # PONTO DE ENTRADA PRINCIPAL
 # ==============================================================================
 if __name__ == "__main__":
+    utils.print_timestamp("Iniciando a execução do pipeline principal...")
+    print("="*80)
+    
     # --- 1. CONFIGURAÇÕES GERAIS ---
     FREQUENCIA_DADOS_HORAS = 3
     JANELA_ENTRADA_HORAS = 24
@@ -170,9 +172,11 @@ if __name__ == "__main__":
 
     # --- 2. CARREGAMENTO E DIVISÃO DOS DADOS ---
     CONFIG_MODELOS = carregar_config_modelos('modelos.json')
+    print("--- Pré-processamento: Carregando GRADE espaço-temporal para modelos DL ---")
     dados_grade_completos = pre.preparar_dados_grade(caminho_arquivo_nc='pre/vento turco.nc')
     
     if dados_grade_completos is not None:
+        print("Grade ws100 calculada e processada com sucesso.")
         n_tempos_total = len(dados_grade_completos.valid_time)
         n_teste = int(n_tempos_total * TEST_SIZE)
         n_treino_cv = n_tempos_total - n_teste
@@ -205,6 +209,8 @@ if __name__ == "__main__":
             df_resultados = pd.DataFrame(resultados_finais).set_index('modelo').sort_values(by='rmse')
             print(df_resultados.to_string(float_format="%.5f"))
             print("="*80)
-
     else:
         print("Falha ao carregar os dados. Execução interrompida.")
+    
+    print("="*80)
+    utils.print_timestamp("Execução do pipeline principal concluída.")

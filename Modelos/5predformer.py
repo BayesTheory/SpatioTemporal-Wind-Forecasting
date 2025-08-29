@@ -80,7 +80,7 @@ class TransformerBlock(nn.Module):
 class PredFormer(nn.Module):
     def __init__(self, past_frames, future_frames, 
                  image_size=(21, 29), patch_size=(7, 7), 
-                 d_model=128, nhead=4, num_encoder_layers=4, dropout=0.1, **kwargs):
+                 d_model=128, nhead=4, num_encoder_layers=4, dropout_rate=0.1, **kwargs):
         super().__init__()
 
         self.past_frames = past_frames
@@ -92,13 +92,12 @@ class PredFormer(nn.Module):
         
         # Parâmetros fixos da arquitetura avançada
         self.num_channels = 1
-        self.dim_head = 64 # Dimensão por cabeça de atenção
+        self.dim_head = 64 
         
         # Parâmetros derivados
         self.image_h, self.image_w = image_size
         self.patch_h, self.patch_w = patch_size
         
-        # Calcula o número de patches para as dimensões *após* o padding
         padded_h = (self.image_h + self.patch_h - 1) // self.patch_h * self.patch_h
         padded_w = (self.image_w + self.patch_w - 1) // self.patch_w * self.patch_w
         self.num_patches = (padded_h // self.patch_h) * (padded_w // self.patch_w)
@@ -111,12 +110,12 @@ class PredFormer(nn.Module):
         )
 
         self.pos_embedding = nn.Parameter(torch.randn(1, self.past_frames, self.num_patches, d_model))
-        self.dropout = nn.Dropout(dropout)
+        self.dropout = nn.Dropout(dropout_rate)
 
         self.transformer_layers = nn.ModuleList([])
         for _ in range(num_encoder_layers):
-            temporal_transformer = TransformerBlock(d_model, nhead, self.dim_head, d_model * 2, dropout)
-            spatial_transformer = TransformerBlock(d_model, nhead, self.dim_head, d_model * 2, dropout)
+            temporal_transformer = TransformerBlock(d_model, nhead, self.dim_head, d_model * 2, dropout_rate)
+            spatial_transformer = TransformerBlock(d_model, nhead, self.dim_head, d_model * 2, dropout_rate)
             self.transformer_layers.append(nn.ModuleList([temporal_transformer, spatial_transformer]))
 
         self.to_future_proj = nn.Linear(past_frames, future_frames)
@@ -129,7 +128,6 @@ class PredFormer(nn.Module):
         B, T_in, H, W = x.shape
         x = x.unsqueeze(2)
 
-        # Padding para que as dimensões sejam divisíveis pelo patch_size
         pad_h = (self.patch_h - H % self.patch_h) % self.patch_h
         pad_w = (self.patch_w - W % self.patch_w) % self.patch_w
         x = F.pad(x, (0, pad_w, 0, pad_h))
@@ -154,7 +152,7 @@ class PredFormer(nn.Module):
         x = rearrange(x, 'b t n d -> b d n t')
         x = self.to_future_proj(x)
         x = rearrange(x, 'b d n t -> b t n d')
-
+        
         x = self.mlp_head(x)
         
         # Reconstrução
@@ -164,7 +162,7 @@ class PredFormer(nn.Module):
                            p1=self.patch_h, p2=self.patch_w, 
                            c=self.num_channels)
 
-        output = output[:, :, :, :H, :W] # Corta o padding
+        output = output[:, :, :, :H, :W]
         output = output.squeeze(2)
 
         return output
