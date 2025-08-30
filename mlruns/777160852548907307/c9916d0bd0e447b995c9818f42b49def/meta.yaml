@@ -1,0 +1,15 @@
+artifact_uri: file:///home/users/rianagario/Projeto%20materia%20DL%20/Sistema%20Turco/mlruns/777160852548907307/c9916d0bd0e447b995c9818f42b49def/artifacts
+end_time: 1756480694728
+entry_point_name: ''
+experiment_id: '777160852548907307'
+lifecycle_stage: active
+run_id: c9916d0bd0e447b995c9818f42b49def
+run_name: CV_Fold_1
+run_uuid: c9916d0bd0e447b995c9818f42b49def
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1756480613899
+status: 3
+tags: []
+user_id: rianagario
