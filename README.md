@@ -72,8 +72,8 @@ Após um ciclo completo de otimização, o `PredFormer` se tornou o modelo com o
 | 🏆 **1º** | **5predformer (Fac-T-S)** | **1.30760** | **0.93202** |
 | 🥈 2º | 4predrnn | 1.33124 | 0.94050 |
 | 🥉 3º | 3convlstm | 1.33959 | 0.94973 |
-| 4º | 2fcnn | 1.86136 | 1.35341 |
-| 5º | 1arima | 2.57494 | 1.90345 |
+| 🏅 4º | 2fcnn | 1.86136 | 1.35341 |
+| 🏅 5º | 1arima | 2.57494 | 1.90345 |
 
 ## 🔮 Próximos Passos
 
@@ -84,3 +84,4 @@ Após um ciclo completo de otimização, o `PredFormer` se tornou o modelo com o
 ## 📄 Licença
 
 Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
+
