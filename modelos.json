@@ -1,10 +1,10 @@
 {
   "1arima": {
-    "ativo": true,
+    "ativo": false,
     "ordem": [1, 0, 1]
   },
   "2fcnn": {
-    "ativo": true,
+    "ativo": false,
     "class_name": "FCNN5",
     "epocas": 250,
     "batch_size": 64,
@@ -13,7 +13,7 @@
     "camadas_ocultas": [2048, 1024, 512, 1024]
   },
   "3convlstm": {
-    "ativo": true,
+    "ativo": false,
     "class_name": "ConvLSTM",
     "epocas": 150,
     "batch_size": 64,
@@ -24,7 +24,7 @@
     "dropout_rate": 0.2
   },
   "4predrnn": {
-    "ativo": true,
+    "ativo": false,
     "class_name": "PredRNN",
     "epocas": 150,
     "batch_size": 64,
@@ -35,7 +35,7 @@
     "dropout_rate": 0.2
   },
     "5predformer": {
-      "ativo": true,
+      "ativo": false,
       "class_name": "PredFormer",
       "epocas": 100,
       "batch_size": 64,
