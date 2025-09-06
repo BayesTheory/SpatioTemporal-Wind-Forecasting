@@ -74,7 +74,8 @@ Após um ciclo completo de otimização, o `PredFormer` se tornou o modelo com o
 | 🥉 3º | 3convlstm | 1.33959 | 0.94973 |
 | 🏅 4º | 2fcnn | 1.86136 | 1.35341 |
 | 🏅 5º | 1arima | 2.57494 | 1.90345 |
-
+Inline-style: 
+![alt text](https://github.com/BayesTheory/SpatioTemporal-Wind-Forecasting/sua_imagem_combinada.png)
 ## 🔮 Próximos Passos
 
 * [ ] **Containerização:** Criar um `Dockerfile` para empacotar o ambiente e o código.
@@ -84,4 +85,5 @@ Após um ciclo completo de otimização, o `PredFormer` se tornou o modelo com o
 ## 📄 Licença
 
 Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
+
 
