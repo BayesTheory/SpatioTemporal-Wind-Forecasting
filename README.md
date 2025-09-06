@@ -2,7 +2,7 @@
 
 An advanced Deep Learning pipeline for spatio-temporal wind speed forecasting using ConvLSTM, PredRNN, and a state-of-the-art Transformer model (PredFormer Fac-T-S). This project handles the entire workflow from data preprocessing to model training, hyperparameter tuning, and evaluation.
 
-![Project Banner](https://github.com/BayesTheory/SpatioTemporal-Wind-Forecasting/raw/main/sua_imagem_combinada.png)
+![Project Banner](https://github.com/BayesTheory/SpatioTemporal-Wind-Forecasting/main/sua_imagem_combinada.png)
 *(Note: Please update the image link to a valid one for it to display correctly)*
 
 ---
@@ -102,3 +102,4 @@ mlflow ui
 ## 📄 License
 
 This project is licensed under the MIT License. See the `LICENSE` file for more details.
+
