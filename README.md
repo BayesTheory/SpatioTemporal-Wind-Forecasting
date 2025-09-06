@@ -2,88 +2,103 @@
 
 An advanced Deep Learning pipeline for spatio-temporal wind speed forecasting using ConvLSTM, PredRNN, and a state-of-the-art Transformer model (PredFormer Fac-T-S). This project handles the entire workflow from data preprocessing to model training, hyperparameter tuning, and evaluation.
 
+![Project Banner](https://github.com/BayesTheory/SpatioTemporal-Wind-Forecasting/raw/main/sua_imagem_combinada.png)
+*(Note: Please update the image link to a valid one for it to display correctly)*
+
 ---
 
 ## ✨ Features
 
-* **Multi-Model Architecture:** Implements and compares multiple deep learning models:
-    * `ARIMA` (Baseline)
-    * `FCNN` (Fully Connected Neural Networks)
-    * `ConvLSTM` (Recurrent-Convolutional)
-    * `PredRNN` (Spatiotemporal LSTM)
-    * `PredFormer (Fac-T-S)` (State-of-the-art pure Transformer)
-* **End-to-End Pipeline:** Automates data loading, preprocessing, training, and evaluation.
-* **Advanced Training:** Utilizes modern techniques for high performance:
-    * Automatic Mixed Precision (AMP) for faster training.
-    * Gradient Clipping for stability.
-    * Configurable Optimizers (`Adam`, `AdamW`) and Schedulers (`CosineAnnealing`, `ReduceLROnPlateau`).
-* **Experiment Tracking:** Fully integrated with **MLflow** for logging parameters, metrics, and visual artifacts.
-* **Rigorous Validation:** Employs Time Series Cross-Validation to ensure robust model evaluation and prevent data leakage.
-* **Centralized Configuration:** All experiments are controlled via a single `modelos.json` file.
+-   **Multi-Model Architecture**: Implements and compares multiple deep learning models against a classical baseline:
+    -   `ARIMA` (Baseline)
+    -   `FCNN` (Fully Connected Neural Network)
+    -   `ConvLSTM` (Recurrent-Convolutional)
+    -   `PredRNN` (Spatiotemporal LSTM)
+    -   `PredFormer (Fac-T-S)` (State-of-the-art pure Transformer)
+-   **End-to-End Pipeline**: Automates the entire workflow, including data loading, preprocessing, training, and evaluation.
+-   **Advanced Training Techniques**: Utilizes modern methods for high performance and stability:
+    -   Automatic Mixed Precision (AMP) for faster training.
+    -   Gradient Clipping to prevent exploding gradients.
+    -   Configurable Optimizers (`Adam`, `AdamW`) and Schedulers (`CosineAnnealing`, `ReduceLROnPlateau`).
+-   **Experiment Tracking**: Fully integrated with **MLflow** for comprehensive logging of parameters, metrics, and visual artifacts.
+-   **Rigorous Validation**: Employs **Time Series Cross-Validation** to ensure robust model evaluation and prevent data leakage.
+-   **Centralized Configuration**: All experiments are managed through a single, easy-to-use `modelos.json` file.
 
-## 🛠️ Tecnologias Utilizadas
+---
 
-* Python 3.8+
-* PyTorch
-* MLflow
-* Xarray & NetCDF4
-* Scikit-learn
-* Pandas & NumPy
-* Einops
+## 📈 Performance Results
 
-## 🚀 Como Rodar o Projeto
+After a full cycle of training and hyperparameter optimization, **PredFormer (Fac-T-S)** emerged as the top-performing model on the test set, demonstrating superior accuracy.
 
-1.  **Clone o repositório:**
-    ```bash
-    git clone [https://github.com/seu-usuario/SpatioTemporal-Wind-Forecasting.git](https://github.com/seu-usuario/SpatioTemporal-Wind-Forecasting.git)
-    cd SpatioTemporal-Wind-Forecasting
-    ```
+| Rank | Model                 | Best RMSE              | Best MAE               |
+| :--: | :-------------------- | :--------------------- | :--------------------- |
+| 🏆 1ˢᵗ | **PredFormer (Fac-T-S)** | **1.30760** | **0.93202** |
+| 🥈 2ⁿᵈ | PredRNN               | 1.33124                | 0.94050                |
+| 🥉 3ʳᵈ | ConvLSTM              | 1.33959                | 0.94973                |
+| 🏅 4ᵗʰ | FCNN                  | 1.86136                | 1.35341                |
+| 🏅 5ᵗʰ | ARIMA                 | 2.57494                | 1.90345                |
 
-2.  **Crie um ambiente virtual e instale as dependências:**
-    ```bash
-    python -m venv venv
-    source venv/bin/activate  # No Windows: venv\Scripts\activate
-    pip install -r requirements.txt
-    ```
+---
 
-3.  **Configure o Experimento:**
-    * Abra o arquivo `modelos.json`.
-    * Defina `"ativo": true` para os modelos que você deseja treinar.
-    * Ajuste os hiperparâmetros conforme necessário.
+## 🛠️ Technologies Used
 
-4.  **Execute o Pipeline Principal:**
-    ```bash
-    python main.py
-    ```
+-   Python 3.8+
+-   PyTorch
+-   MLflow
+-   Xarray & NetCDF4
+-   Scikit-learn
+-   Pandas & NumPy
+-   Einops
 
-5.  **Visualize os Resultados com MLflow:**
-    * Em um novo terminal, na mesma pasta, execute:
-    ```bash
-    mlflow ui
-    ```
-    * Acesse `http://127.0.0.1:5000` no seu navegador.
+---
 
-## 📈 Resultados Finais
+## 🚀 Getting Started
 
-Após um ciclo completo de otimização, o `PredFormer` se tornou o modelo com o melhor desempenho no conjunto de teste:
+Follow these steps to set up and run the project on your local machine.
 
-| Posição | Modelo | Melhor RMSE | Melhor MAE |
-| :--- | :--- | :--- | :--- |
-| 🏆 **1º** | **5predformer (Fac-T-S)** | **1.30760** | **0.93202** |
-| 🥈 2º | 4predrnn | 1.33124 | 0.94050 |
-| 🥉 3º | 3convlstm | 1.33959 | 0.94973 |
-| 🏅 4º | 2fcnn | 1.86136 | 1.35341 |
-| 🏅 5º | 1arima | 2.57494 | 1.90345 |
-Inline-style: 
-![alt text](https://github.com/BayesTheory/SpatioTemporal-Wind-Forecasting/sua_imagem_combinada.png)
-## 🔮 Próximos Passos
+#### 1. Clone the Repository
+```bash
+git clone [https://github.com/seu-usuario/SpatioTemporal-Wind-Forecasting.git](https://github.com/seu-usuario/SpatioTemporal-Wind-Forecasting.git)
+cd SpatioTemporal-Wind-Forecasting
+```
 
-* [ ] **Containerização:** Criar um `Dockerfile` para empacotar o ambiente e o código.
-* [ ] **API de Inferência:** Desenvolver um script com FastAPI para servir o modelo campeão (`.pth`) via API.
-* [ ] **Pipeline End-to-End (CI/CD):** Automatizar o retreino e deploy em uma plataforma de nuvem (AWS, GCP, Azure).
+#### 2. Create Environment and Install Dependencies
+```bash
+# Create and activate a virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows use: venv\Scripts\activate
 
-## 📄 Licença
+# Install the required packages
+pip install -r requirements.txt
+```
 
-Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
+#### 3. Configure the Experiment
+-   Open the `modelos.json` file.
+-   Set `"ativo": true` for the models you wish to train.
+-   Adjust hyperparameters as needed for your experiment.
 
+#### 4. Run the Main Pipeline
+```bash
+python main.py
+```
 
+#### 5. Visualize Results with MLflow
+-   In a new terminal (from the same project directory), launch the MLflow UI:
+```bash
+mlflow ui
+```
+-   Open your web browser and navigate to `http://127.0.0.1:5000` to view and compare your experiment runs.
+
+---
+
+## 🔮 Future Work
+
+-   [ ] **Containerization:** Create a `Dockerfile` to package the environment and code for easy deployment.
+-   [ ] **Inference API:** Develop a `FastAPI` script to serve the champion model (`.pth`) via a REST API.
+-   [ ] **CI/CD Pipeline:** Automate retraining and deployment on a cloud platform (e.g., AWS, GCP, Azure).
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License. See the `LICENSE` file for more details.
